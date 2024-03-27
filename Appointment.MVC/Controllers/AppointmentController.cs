@@ -101,6 +101,11 @@ namespace Appointment.MVC.Controllers
             int userId = HttpContext.Session.GetInt32("UserId") ?? -1;
             DateOnly selectedDate = date ?? DateOnly.FromDateTime(DateTime.Today);
             ViewBag.SelectedDate = selectedDate;
+
+            string token = HttpContext.Request.Cookies["AuthToken"];
+            _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+
             HttpResponseMessage response = _client.GetAsync(_client.BaseAddress + $"/AppointmentAPI/GetListOfAppointments?id={userId}&date={selectedDate}").Result;
 
             if (response.IsSuccessStatusCode)
@@ -120,6 +125,9 @@ namespace Appointment.MVC.Controllers
         [HttpPost]
         public IActionResult CloseAppointment(int appointmentId ,DateOnly selectedDate)
         {
+            string token = HttpContext.Request.Cookies["AuthToken"];
+            _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
             HttpResponseMessage response = _client.GetAsync(_client.BaseAddress + $"/AppointmentAPI/CloseAppointment?appointmentId={appointmentId}").Result;
             if (response.IsSuccessStatusCode)
             {
@@ -145,6 +153,8 @@ namespace Appointment.MVC.Controllers
         [HttpPost]
         public IActionResult CancelAppointment(int appointmentId, DateOnly selectedDate)
         {
+            string token = HttpContext.Request.Cookies["AuthToken"];
+            _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
             HttpResponseMessage response = _client.GetAsync(_client.BaseAddress + $"/AppointmentAPI/CancelAppointment?appointmentId={appointmentId}").Result;
             if (response.IsSuccessStatusCode)
             {

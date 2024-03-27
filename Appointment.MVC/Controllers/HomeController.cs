@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using System.Diagnostics;
 using System.Text;
+using Appointment.UtilityLayer;
 
 namespace Appointment.MVC.Controllers
 {
@@ -45,10 +46,16 @@ namespace Appointment.MVC.Controllers
                 HttpResponseMessage response = _client.PostAsync(_client.BaseAddress + "/HomeAPI/IsValidUser", content).Result;
                 if (response.IsSuccessStatusCode)
                 {
-                    int userId = JsonConvert.DeserializeObject<int>(response.Content.ReadAsStringAsync().Result);
+                    string responseData = response.Content.ReadAsStringAsync().Result;
+                    var result = JsonConvert.DeserializeObject<dynamic>(responseData);
+                    int userId = result.userId;
+                    string token = result.token;
+
                     if (userId != -1)
                     {
+                        Utility.UserId = userId;
                         HttpContext.Session.SetInt32("UserId", userId);
+                        HttpContext.Response.Cookies.Append("AuthToken", token);
                         return RedirectToAction("AppointmentList", "Appointment");
                     }
 
@@ -65,63 +72,72 @@ namespace Appointment.MVC.Controllers
             return View();
         }
 
-            [HttpGet]
-            public ActionResult Register()
+        [HttpGet]
+        public IActionResult LogOut()
+        {
+            Utility.UserId = -1;
+            HttpContext.Session.Remove("UserId");
+            HttpContext.Response.Cookies.Delete("AuthToken");
+            return RedirectToAction("Index");
+        }
+
+        [HttpGet]
+        public ActionResult Register()
+        {
+            return View();
+        }
+
+
+        [HttpPost]
+        public ActionResult Register(SignUpModel model)
+        {
+            if (ModelState.IsValid)
             {
-                return View();
-            }
-
-
-            [HttpPost]
-            public ActionResult Register(SignUpModel model)
-            {
-                if (ModelState.IsValid)
-                {
-                    string data = JsonConvert.SerializeObject(model);
-                    StringContent content = new StringContent(data, Encoding.UTF8, "application/json");
-                    HttpResponseMessage response = _client.PostAsync(_client.BaseAddress + "/HomeAPI/Register", content).Result;
-                    if (response.IsSuccessStatusCode)
-                    {
-                        string responseData = response.Content.ReadAsStringAsync().Result;
-                        bool isRegistered = JsonConvert.DeserializeObject<bool>(responseData);
-                        if (isRegistered)
-                        {
-                            TempData["SuccessMessage"] = "User Registered successfully!";
-                            return RedirectToAction("LogIn");
-                        }
-                        else
-                        {
-                            ViewBag.ErrorMessage = "Error occurred while saving user. Please try again.";
-                        }
-                    }
-                    else
-                    {
-                        ViewBag.ErrorMessage = "Error occurred while calling the API. Please try again.";
-                    }
-                }
-
-                return View(model);
-            }
-
-            public JsonResult CheckEmailExists(string email)
-            {
-                HttpResponseMessage response = _client.GetAsync(_client.BaseAddress + $"/HomeAPI/IsEmailExists?email={email}").Result;
+                string data = JsonConvert.SerializeObject(model);
+                StringContent content = new StringContent(data, Encoding.UTF8, "application/json");
+                HttpResponseMessage response = _client.PostAsync(_client.BaseAddress + "/HomeAPI/Register", content).Result;
                 if (response.IsSuccessStatusCode)
                 {
                     string responseData = response.Content.ReadAsStringAsync().Result;
-                    bool exists = JsonConvert.DeserializeObject<bool>(responseData);
-                    return Json(new { exists = exists });
+                    bool isRegistered = JsonConvert.DeserializeObject<bool>(responseData);
+                    if (isRegistered)
+                    {
+                        TempData["SuccessMessage"] = "User Registered successfully!";
+                        return RedirectToAction("LogIn");
+                    }
+                    else
+                    {
+                        ViewBag.ErrorMessage = "Error occurred while saving user. Please try again.";
+                    }
                 }
                 else
                 {
-                    return Json(new { exists = true });
+                    ViewBag.ErrorMessage = "Error occurred while calling the API. Please try again.";
                 }
             }
 
-            [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-            public IActionResult Error()
+            return View(model);
+        }
+
+        public JsonResult CheckEmailExists(string email)
+        {
+            HttpResponseMessage response = _client.GetAsync(_client.BaseAddress + $"/HomeAPI/IsEmailExists?email={email}").Result;
+            if (response.IsSuccessStatusCode)
             {
-                return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+                string responseData = response.Content.ReadAsStringAsync().Result;
+                bool exists = JsonConvert.DeserializeObject<bool>(responseData);
+                return Json(new { exists = exists });
+            }
+            else
+            {
+                return Json(new { exists = true });
             }
         }
+
+        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+        public IActionResult Error()
+        {
+            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
     }
+}

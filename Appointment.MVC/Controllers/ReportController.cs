@@ -20,6 +20,10 @@ namespace Appointment.MVC.Controllers
             int userId = HttpContext.Session.GetInt32("UserId") ?? -1;
             ViewBag.SelectedMonth=month;
             ViewBag.SelectedYear=year;
+
+            string token = HttpContext.Request.Cookies["AuthToken"];
+            _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
             HttpResponseMessage response = _client.GetAsync(_client.BaseAddress + $"/ReportAPI/GetAppointmentSummaryReport?doctorId={userId}&month={month}&year={year}").Result;
 
             if (response.IsSuccessStatusCode)
@@ -32,7 +36,7 @@ namespace Appointment.MVC.Controllers
             else
             {
                 ViewBag.ErrorMessage = "Failed to retrieve appointments.";
-                return View(new List<AppointmentViewModel>());
+                return View(new List<AppointmentSummaryReportModel>());
             }
           
         }
@@ -42,6 +46,10 @@ namespace Appointment.MVC.Controllers
             int userId = HttpContext.Session.GetInt32("UserId") ?? -1;
             ViewBag.SelectedMonth = month;
             ViewBag.SelectedYear = year;
+
+            string token = HttpContext.Request.Cookies["AuthToken"];
+            _client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
             HttpResponseMessage response = _client.GetAsync(_client.BaseAddress + $"/ReportAPI/GetAppointmentDetailedReport?doctorId={userId}&month={month}&year={year}").Result;
 
             if (response.IsSuccessStatusCode)

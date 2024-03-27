@@ -1,11 +1,7 @@
 ﻿namespace Appointment.UtilityLayer
 {
-    public static class Utility
+    public class Utility
     {
-        public enum AppointmentStatus
-        {
-            Open, Closed, Cancelled
-        }
-
+        public static int UserId { get; set; } = -1;
     }
 }

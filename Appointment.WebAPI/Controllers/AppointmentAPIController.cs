@@ -1,5 +1,6 @@
 ﻿using Appointment.BusinessLayer;
 using Appointment.ModelView;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Globalization;
@@ -41,6 +42,7 @@ namespace Appointment.WebAPI.Controllers
         }
 
         [HttpGet]
+        [Authorize]
         public IActionResult GetListOfAppointments(int id, string date)
         {
             DateTime parsedDate = DateTime.ParseExact(date, "dd-MM-yyyy", CultureInfo.InvariantCulture);
@@ -49,12 +51,13 @@ namespace Appointment.WebAPI.Controllers
             return Ok(listOfAppointments);
         }
         [HttpGet]
+        [Authorize]
         public IActionResult CloseAppointment(int appointmentId)
         {
             return Ok(_business.CloseAppointment(appointmentId));
         }
         [HttpGet]
-
+        [Authorize]
         public IActionResult CancelAppointment(int appointmentId)
         {
             return Ok(_business.CancelAppointment(appointmentId));
